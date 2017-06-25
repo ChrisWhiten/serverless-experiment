@@ -3,6 +3,7 @@
 const config = require('./config/config');
 
 module.exports.stripeWebhook = (event, context, callback) => {
+  console.log('made it.');
   console.log('request:', event);
 
   const stripe = require('stripe')(config.stripeSecretKey);

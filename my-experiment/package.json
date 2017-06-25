@@ -4,9 +4,14 @@
   "description": "",
   "main": "handler.js",
   "dependencies": {
-    "stripe": "^4.22.0"
+    "serverless-dynamodb-local": "^0.2.22",
+    "serverless-offline": "^3.14.2",
+    "stripe": "^4.22.0",
+    "uuid": "^3.1.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "serverless-offline": "^3.14.2"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

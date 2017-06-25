@@ -1,25 +1,35 @@
-# Welcome to Serverless!
-#
-# This file is the main config file for your service.
-# It's very minimal at this point and uses default values.
-# You can always add more config options for more control.
-# We've included some commented out config examples here.
-# Just uncomment any of them to get that config option.
-#
-# For full config options, check the docs:
-#    docs.serverless.com
-#
-# Happy Coding!
-
 service: my-experiment
 
+plugins:
+  - serverless-offline
+  - serverless-dynamodb-local
+
 # You can pin your service to only deploy with a specific Serverless version
-# Check out our docs for more details
-# frameworkVersion: "=X.X.X"
+frameworkVersion: ">=1.1.0 <2.0.0"
+
+custom:
+  dynamodb:
+    start:
+      port: 8000
+      dbPath: /Users/chewmacca/dev/serverless-experiment/my-experiment/db
+      migrate: false
 
 provider:
   name: aws
   runtime: nodejs6.10
+  environment:
+    BOOKING_TABLE: ${self:service}-${opt:stage, self:provider.stage}-bookings
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.BOOKING_TABLE}"
+
 
 # you can overwrite defaults here
 #  stage: dev
@@ -62,6 +72,22 @@ package:
     - package.json
 
 functions:
+  createBooking:
+    handler: bookings/create.create
+    events:
+      - http:
+          path: bookings
+          method: post
+          cors: true
+
+  listBookings:
+    handler: bookings/list.list
+    events:
+      - http:
+          path: bookings
+          method: get
+          cors: true
+
   stripeWebhook:
     handler: stripeWebhook.stripeWebhook
     events: 
@@ -114,3 +140,22 @@ functions:
 #     NewOutput:
 #       Description: "Description for the output"
 #       Value: "Some output value"
+
+resources:
+  Resources:
+    BookingsDynamoDbTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: id
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:provider.environment.BOOKING_TABLE}

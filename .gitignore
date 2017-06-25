@@ -46,3 +46,6 @@ config.js
 
 # Backup files
 *.bak
+
+# do not commit the database
+db
