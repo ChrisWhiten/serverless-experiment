@@ -7,20 +7,33 @@ module.exports.list = (event, context, callback) => {
     TableName: process.env.BOOKING_TABLE,
   };
 
-  // fetch all todos from the database
-  dynamodb.scan(params, (error, result) => {
-    // handle potential errors
-    if (error) {
-      console.error(error);
-      callback(new Error('Couldn\'t fetch the bookings.'));
-      return;
-    }
+  console.log('event:', event);
 
-    // create a response
+  if (!event || !event.queryStringParameters) {
+    console.log('Query string parameters are required.  Bad request');
     const response = {
-      statusCode: 200,
-      body: JSON.stringify(result.Items),
+      statusCode: 400,
     };
-    callback(null, response);
-  });
+    return callback(response, null);
+  }
+
+  switch (event.queryStringParameters.type) {
+    case 'upcoming':
+    case 'participating':
+    case 'calendar':
+    default:
+      dynamodb.scan(params, (error, result) => {
+        if (error) {
+          console.error(error);
+          callback(new Error('Couldn\'t fetch the bookings.'));
+          return;
+        }
+
+        const response = {
+          statusCode: 200,
+          body: JSON.stringify(result.Items),
+        };
+        callback(null, response);
+      });
+  }
 };

@@ -72,6 +72,14 @@ package:
     - package.json
 
 functions:
+  deleteBooking:
+    handler: bookings/delete.delete
+    events:
+      - http:
+          path: bookings/{id}
+          method: delete
+          cors: true
+
   createBooking:
     handler: bookings/create.create
     events:
