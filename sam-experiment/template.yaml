@@ -1,0 +1,182 @@
+AWSTemplateFormatVersion : '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Description: |
+  An example RESTful service
+
+Globals:
+  Function:
+    Timeout: 180
+
+Resources:
+  CreateLocation:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs6.10
+      Handler: locations/create.handler
+      Events:
+        CreateLocation:
+          Type: Api
+          Properties:
+            Path: /locations
+            Method: post
+  ListLocations:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs6.10
+      Handler: locations/list.handler
+      Events:
+        ListLocations:
+          Type: Api
+          Properties:
+            Path: /locations
+            Method: get
+  OptionsLocations:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs6.10
+      Handler: schedules/options.handler
+      Events:
+        OptionsLocations:
+          Type: Api
+          Properties:
+            Path: /locations
+            Method: options
+  OptionsBookings:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs6.10
+      Handler: schedules/options.handler
+      Events:
+        OptionsBookings:
+          Type: Api
+          Properties:
+            Path: /bookings
+            Method: options
+  ListSlots:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs6.10
+      Handler: slots/list.handler
+      Events:
+        ListSlots:
+          Type: Api
+          Properties:
+            Path: /slots
+            Method: get
+  CreateBooking:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs6.10
+      Handler: bookings/create.handler
+      Events:
+        ListBookings:
+          Type: Api
+          Properties:
+            Path: /bookings
+            Method: post
+  GetBookings:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs6.10
+      Handler: bookings/list.handler
+      Events:
+        ListBookings:
+          Type: Api
+          Properties:
+            Path: /bookings
+            Method: get
+  GetSchedules:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs6.10
+      Handler: schedules/list.handler
+      Events:
+        ListSchedules:
+          Type: Api
+          Properties:
+            Path: /schedules
+            Method: get
+
+  GetSchedule:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs6.10
+      Handler: schedules/get.handler
+      Events:
+        ListSchedules:
+          Type: Api
+          Properties:
+            Path: /schedules/{id}
+            Method: get
+  
+  OptionsSchedules:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs6.10
+      Handler: schedules/options.handler
+      Events:
+        ListSchedules:
+          Type: Api
+          Properties:
+            Path: /schedules
+            Method: options
+
+  OptionsSchedule:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs6.10
+      Handler: schedules/options.handler
+      Events:
+        ListSchedules:
+          Type: Api
+          Properties:
+            Path: /schedules/{id}
+            Method: options
+
+  CreateSchedule:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs6.10
+      Handler: schedules/create.handler
+      Events:
+        ListSchedules:
+          Type: Api
+          Properties:
+            Path: /schedules
+            Method: post
+  UpdateSchedule:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs6.10
+      Handler: schedules/update.handler
+      Events:
+        ListSchedules:
+          Type: Api
+          Properties:
+            Path: /schedules/{id}
+            Method: put
+  DeleteSchedule:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs6.10
+      Handler: schedules/delete.handler
+      Events:
+        ListSchedules:
+          Type: Api
+          Properties:
+            Path: /schedules/{id}
+            Method: delete
+
+  CreateDB:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs6.10
+      Timeout: 180
+      Handler: operations/index.handler
+      Events:
+        CreateDB:
+          Type: Api
+          Properties:
+            Path: /operations
+            Method: get
