@@ -11,7 +11,7 @@
 'use strict';
 const dynamodb = require('../dynamodb');
 const uuid = require('uuid');
-const moment = require('moment');
+const moment = require('moment-timezone');
 
 const slotQuery = {
   TableName: 'slots',
@@ -55,11 +55,11 @@ function populateEphemeralSlots(slots, locationMap, schedules, start, end) {
           s.locations.forEach(l => {
             s.schedule[dow].forEach(slot => {
               const newSlot = Object.assign({}, slot);
-              const scheduledSlotTime = new Date(slot.startTime);
-              let computedSlot = moment(currentDate);
+              const scheduledSlotTime = moment(slot.startTime).tz('America/Toronto');
+              let computedSlot = moment(currentDate).tz('America/Toronto');
               computedSlot.set({
-                hour: scheduledSlotTime.getHours(),
-                minute: scheduledSlotTime.getMinutes(),
+                hour: scheduledSlotTime.hour(),
+                minute: scheduledSlotTime.minute(),
               });
               newSlot.startTime = new Date(computedSlot);
               slots[locationMap[l.locationId]].bookings.push(newSlot);
