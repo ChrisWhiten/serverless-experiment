@@ -7,17 +7,18 @@ exports.handler = (event, context, callback) => {
 
   const json = JSON.parse(event.body);
   console.log('Booking json:', json);
-  
+
   const params = {
     TableName: 'bookings',
     Item: {
       id: uuid.v1(),
+      tenantId: 'foo', // TODO: read from token
       createdAt: timestamp,
       updatedAt: timestamp,
       leaderFirstName: json.leaderFirstName,
       leaderLastName: json.leaderLastName,
       leaderEmail: json.leaderEmail,
-      leaderPhoneNumber: json.leaderPhoneNumber,
+      leaderPhoneNumber: json.leaderPhoneNumber || undefined,
       slotCount: json.slotCount,
       start: json.start,
       duration: json.duration,
@@ -25,13 +26,32 @@ exports.handler = (event, context, callback) => {
       locationId: json.locationId,
       paidAmount: json.paidAmount,
       bookingCost: json.bookingCost,
+      isCancelled: false,
+      cancellationReason: undefined,
+      cancellationOtherReason: undefined,
+      logs: [{
+        creator: 'Chris Whiten',
+        action: 'Booking created',
+        timestamp,
+      }],
+      payments: [],
     },
   };
 
+  if (json.paidAmount) {
+    params.Item.paidAmount.push(json.paidAmount);
+  }
 
+
+  console.log('creating...', params);
   dynamodb.put(params, (error, res) => {
     console.log('create complete', res);
     if (error) {
+      console.log(Object.keys(error));
+      console.log(error.message);
+      console.log(error.code);
+      console.log(error.statusCode);
+      console.log(error.requestId);
       console.error(error);
       callback(new Error('Couldn\'t create the booking.'));
       return;

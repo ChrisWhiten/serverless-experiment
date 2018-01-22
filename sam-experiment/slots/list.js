@@ -23,7 +23,7 @@ const bookingQuery = {
   TableName: 'bookings',
 };
 
-function initializeLocations(schedules, start, end) {
+function initializeLocations(schedules) {
   const locationMap = {};
   let slots = [];
   schedules.map(s => {
@@ -46,11 +46,15 @@ function initializeLocations(schedules, start, end) {
 }
 
 function populateEphemeralSlots(slots, locationMap, schedules, start, end) {
-  let currentDate = start;
+  let currentDate = moment(start).tz('America/Toronto');
+  console.log('hmmm', start, end);
   while (currentDate < end) {
-    const dow = moment(currentDate).format('dddd');
+    console.log('processing date', moment(currentDate).tz('America/Toronto').format('dddd, MMMM Do YYYY, h:mm:ss a'));
+    console.log('------------------------');
+    const dow = moment(currentDate).format('dddd'); // "Monday", "Tuesday", etc..
     schedules.forEach(s => {
       if (dow in s.schedule) {
+        console.log(dow,'is in', s);
         if (s.locations) {
           s.locations.forEach(l => {
             s.schedule[dow].forEach(slot => {
@@ -60,8 +64,12 @@ function populateEphemeralSlots(slots, locationMap, schedules, start, end) {
               computedSlot.set({
                 hour: scheduledSlotTime.hour(),
                 minute: scheduledSlotTime.minute(),
+                second: 0,
+                second: 0,
+                millisecond: 0,
               });
               newSlot.startTime = new Date(computedSlot);
+              console.log('adding', newSlot, l);
               slots[locationMap[l.locationId]].bookings.push(newSlot);
             });
           });
@@ -75,7 +83,8 @@ function populateEphemeralSlots(slots, locationMap, schedules, start, end) {
 
 function populateBookings(slots, bookings, locationMap) {
   bookings.forEach(b => {
-    const slotList = slots[locationMap[b.locationId]].bookings;
+    const l = locationMap[b.locationId];
+    const slotList = slots[l].bookings;
     const timeToMatch = new Date(b.start);
     timeToMatch.setSeconds(0);
     timeToMatch.setMilliseconds(0);
@@ -83,24 +92,36 @@ function populateBookings(slots, bookings, locationMap) {
       let slot = slotList[i];
 
       if (moment(slot.startTime).isSame(timeToMatch)) {
+        console.log('THE SAME!', slot.startTime, timeToMatch);
         if (!slot.bookings) {
           slot.bookings = [];
         }
 
         slot.bookings.push(b);
         break;
+      } else {
+        console.log('not.', slot.startTime, timeToMatch);
       }
     }
   });
+}
+
+function populateWithIndividualSlots(slots, locationMap, individualSlots) {
+  console.log('before...', JSON.stringify(slots));
+  individualSlots.forEach(s => {
+    slots[locationMap[s.locationId]].bookings.push(s);
+  });
+
+  console.log('after...', JSON.stringify(slots));
 }
 
 exports.handler = (event, context, callback) => {
   // TODO: parse params
   // add date range to all above queries ^
   console.log('event', event);
-  if (!event || 
-    !event.queryStringParameters || 
-    !event.queryStringParameters.start || 
+  if (!event ||
+    !event.queryStringParameters ||
+    !event.queryStringParameters.start ||
     !event.queryStringParameters.end) {
     console.log('Query string parameters (start, end) are required.  Bad request');
     const response = {
@@ -109,17 +130,78 @@ exports.handler = (event, context, callback) => {
     return callback(response, null);
   }
 
-  const start = new Date(event.queryStringParameters.start);
-  const end = new Date(event.queryStringParameters.end);
+  console.log('valid query params');
+
+  const start = new Date(parseInt(event.queryStringParameters.start));
+  const end = new Date(parseInt(event.queryStringParameters.end));
+  const tenantId = 'foo'; // TODO: read from token
+  const locationIds = ['7feca3c0-ed9e-11e7-a85f-afc7af12ef79', '8f705990-ed9e-11e7-a8ca-dd0857dd3dcf']; // TODO: read from token
 
   // event.queryStringParameters.start (utc timestamp)
   // event.queryStringParameters.end (utc timestamp)
 
-  const getSlots = dynamodb.scan(slotQuery).promise();
+  bookingQuery.IndexName = 'ByTenantAndStartTimeIndex';
+  bookingQuery.KeyConditionExpression = 'tenantId = :t and #start between :s and :e';
+  bookingQuery.ExpressionAttributeValues = {
+    ':s': start.getTime(),
+    ':e': end.getTime(),
+    ':t': tenantId,
+  };
+  bookingQuery.ExpressionAttributeNames = {
+    '#start': 'start',
+  };
+
+  if (locationIds) {
+    const locationsObj = {};
+    let index = 0;
+    locationIds.forEach(l => {
+      locationsObj[`:locationvalue${index}`] = l;
+      index++;
+    });
+
+    const quoted = locationIds.map(l => `"${l}"`);
+    bookingQuery.FilterExpression = `locationId IN (${Object.keys(locationsObj).toString()})`;
+    Object.keys(locationsObj).forEach(l => {
+      bookingQuery.ExpressionAttributeValues[l] = locationsObj[l];
+    });
+  }
+
+  slotQuery.IndexName = 'SlotsByTenantAndStartTimeIndex';
+  slotQuery.KeyConditionExpression = 'tenantId = :t and startTime between :s and :e';
+  slotQuery.ExpressionAttributeValues = {
+    ':s': start.getTime(),
+    ':e': end.getTime(),
+    ':t': tenantId,
+  };
+
+  // this is a duplicate of the booking query.  should it be?
+  if (locationIds) {
+    const locationsObj = {};
+    let index = 0;
+    locationIds.forEach(l => {
+      locationsObj[`:locationvalue${index}`] = l;
+      index++;
+    });
+
+    const quoted = locationIds.map(l => `"${l}"`);
+    slotQuery.FilterExpression = `locationId IN (${Object.keys(locationsObj).toString()})`;
+    Object.keys(locationsObj).forEach(l => {
+      slotQuery.ExpressionAttributeValues[l] = locationsObj[l];
+    });
+  }
+
+  const getSlots = dynamodb.query(slotQuery).promise();
+  // const getSlots = dynamodb.scan(slotQuery).promise();
   const getSchedules = dynamodb.scan(scheduleQuery).promise();
-  const getBookings = dynamodb.scan(bookingQuery).promise();
+  const getBookings = dynamodb.query(bookingQuery).promise();
 
   Promise.all([getSlots, getSchedules, getBookings]).then((results) => {
+    const individualSlots = results[0].Items;
+    console.log('^^^^^');
+    console.log(individualSlots);
+    console.log(slotQuery);
+    console.log('^^^^^');
+    const schedules = results[1].Items;
     // return grouped by location
     // grouped by day
     // a list of availability slots
@@ -129,15 +211,23 @@ exports.handler = (event, context, callback) => {
     // figure out what DOW it is, pull slots from matching schedules for each DOW
     // more, but let's start with that...
 
+    // console.log('&&&&&&&');
+    // console.log(JSON.stringify(results[2].Items));
+    // console.log('&&&&&&&');
     // initialize location map
-    const schedules = results[1].Items;
+    // console.log('got some schedules', schedules)
     const slotsAndMap = initializeLocations(schedules, start, end); // once we have bookings + slots too, include that in initialization
+    console.log('locations initialized');
     let slots = slotsAndMap[0];
     let locationMap = slotsAndMap[1];
     populateEphemeralSlots(slots, locationMap, schedules, start, end);
+    populateWithIndividualSlots(slots, locationMap, individualSlots);
+    // console.log('ephemeral slots created', JSON.stringify(slots));
     const bookings = results[2].Items;
     populateBookings(slots, bookings, locationMap);
+    console.log('bookings populated', bookings);
 
+    console.log('returning', JSON.stringify(slots));
     const response = {
       statusCode: 200,
       headers: {
@@ -155,6 +245,7 @@ exports.handler = (event, context, callback) => {
 
     callback(null, response);
   }).catch(err => {
+    console.log('uh oh...');
     console.log('Why was there an error?', err);
     const response = {
       statusCode: 401,

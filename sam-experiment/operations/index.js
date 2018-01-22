@@ -39,12 +39,12 @@ const createBookingsParam = {
   TableName: 'bookings',
   KeySchema: [
     { AttributeName: 'id', KeyType: 'HASH' },
-    // { AttributeName: 'start', KeyType: 'RANGE' },
   ],
   AttributeDefinitions: [
     { AttributeName: 'id', AttributeType: 'S'},
     // { AttributeName: 'name', AttributeType: 'S' },
-    // { AttributeName: 'start', AttributeType: 'S' },
+    { AttributeName: 'start', AttributeType: 'N' },
+    { AttributeName: 'tenantId', AttributeType: 'S' },
     // { AttributeName: 'end', AttributeType: 'S' },
     // { AttributeName: 'schedule', AttributeType: '???'}
   ],
@@ -52,6 +52,26 @@ const createBookingsParam = {
     ReadCapacityUnits: 1,
     WriteCapacityUnits: 1,
   },
+  GlobalSecondaryIndexes: [{
+    IndexName: 'ByTenantAndStartTimeIndex',
+    KeySchema: [
+      {
+        AttributeName: 'tenantId',
+        KeyType: 'HASH',
+      },
+      {
+        AttributeName: 'start',
+        KeyType: 'RANGE',
+      },
+    ],
+    Projection: {
+      ProjectionType: 'ALL',
+    },
+    ProvisionedThroughput: {
+      ReadCapacityUnits: 1,
+      WriteCapacityUnits: 1,
+    },
+  }],
 };
 
 const createSlotsParam = {
@@ -62,6 +82,8 @@ const createSlotsParam = {
   ],
   AttributeDefinitions: [
     { AttributeName: 'id', AttributeType: 'S'},
+    { AttributeName: 'startTime', AttributeType: 'N' },
+    { AttributeName: 'tenantId', AttributeType: 'S' },
     // { AttributeName: 'name', AttributeType: 'S' },
     // { AttributeName: 'start', AttributeType: 'S' },
     // { AttributeName: 'end', AttributeType: 'S' },
@@ -71,20 +93,40 @@ const createSlotsParam = {
     ReadCapacityUnits: 1,
     WriteCapacityUnits: 1,
   },
+  GlobalSecondaryIndexes: [{
+    IndexName: 'SlotsByTenantAndStartTimeIndex',
+    KeySchema: [
+      {
+        AttributeName: 'tenantId',
+        KeyType: 'HASH',
+      },
+      {
+        AttributeName: 'startTime',
+        KeyType: 'RANGE',
+      },
+    ],
+    Projection: {
+      ProjectionType: 'ALL',
+    },
+    ProvisionedThroughput: {
+      ReadCapacityUnits: 1,
+      WriteCapacityUnits: 1,
+    },
+  }],
 };
 
 const createUsersParams = {
   TableName : "users",
-  KeySchema: [       
+  KeySchema: [
       { AttributeName: "id", KeyType: "HASH"},  //Partition key
       { AttributeName: "name", KeyType: "RANGE" }  //Sort key
   ],
-  AttributeDefinitions: [       
+  AttributeDefinitions: [
       { AttributeName: "id", AttributeType: "S" },
       { AttributeName: "name", AttributeType: "S" }
   ],
-  ProvisionedThroughput: {       
-      ReadCapacityUnits: 1, 
+  ProvisionedThroughput: {
+      ReadCapacityUnits: 1,
       WriteCapacityUnits: 1
   }
 };
@@ -97,7 +139,7 @@ exports.handler = (event, context, callback) => {
   const createSlots = dynamodb.createTable(createSlotsParam).promise();
   const createBookings = dynamodb.createTable(createBookingsParam).promise();
 
-  Promise.all([createLocations, createUsers, createSchedules, createSlots, createBookings]).then(values => {
+  Promise.all([/*createLocations, createUsers, createSchedules,*/ createSlots/*, createBookings*/]).then(values => {
     console.log('Created!', values);
     const response = {
       statusCode: 200,

@@ -64,17 +64,75 @@ Resources:
           Properties:
             Path: /slots
             Method: get
+
+  CreateSlot:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs6.10
+      Handler: slots/create.handler
+      Events:
+        SlotBooking:
+          Type: Api
+          Properties:
+            Path: /slots
+            Method: post
+
+  OptionsSlots:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs6.10
+      Handler: schedules/options.handler
+      Events:
+        OptionsSlots:
+          Type: Api
+          Properties:
+            Path: /slots
+            Method: options
+
   CreateBooking:
     Type: AWS::Serverless::Function
     Properties:
       Runtime: nodejs6.10
       Handler: bookings/create.handler
       Events:
-        ListBookings:
+        CreateBooking:
           Type: Api
           Properties:
             Path: /bookings
             Method: post
+  OptionsBooking:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs6.10
+      Handler: schedules/options.handler
+      Events:
+        OptionsBooking:
+          Type: Api
+          Properties:
+            Path: /bookings/{id}
+            Method: options
+  UpdateBooking:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs6.10
+      Handler: bookings/update.handler
+      Events:
+        UpdateBooking:
+          Type: Api
+          Properties:
+            Path: /bookings/{id}
+            Method: put
+  GetBooking:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs6.10
+      Handler: bookings/get.handler
+      Events:
+        GetBooking:
+          Type: Api
+          Properties:
+            Path: /bookings/{id}
+            Method: get
   GetBookings:
     Type: AWS::Serverless::Function
     Properties:
@@ -104,12 +162,12 @@ Resources:
       Runtime: nodejs6.10
       Handler: schedules/get.handler
       Events:
-        ListSchedules:
+        GetSchedule:
           Type: Api
           Properties:
             Path: /schedules/{id}
             Method: get
-  
+
   OptionsSchedules:
     Type: AWS::Serverless::Function
     Properties:
