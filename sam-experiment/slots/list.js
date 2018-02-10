@@ -15,12 +15,27 @@ const moment = require('moment-timezone');
 
 const slotQuery = {
   TableName: 'slots',
+  IndexName: 'SlotsByTenantAndStartTimeIndex',
+  KeyConditionExpression: 'tenantId = :t and startTime between :s and :e',
 };
 const scheduleQuery = {
   TableName: 'schedules',
 };
 const bookingQuery = {
   TableName: 'bookings',
+  IndexName: 'ByTenantAndStartTimeIndex',
+  KeyConditionExpression: 'tenantId = :t and #start between :s and :e',
+  ExpressionAttributeNames: {
+    '#start': 'start',
+  },
+};
+const blockQuery = {
+  TableName: 'blocks',
+  IndexName: 'ByTenantAndStartTimeIndex',
+  KeyConditionExpression: 'tenantId = :t and #start between :s and :e',
+  ExpressionAttributeNames: {
+    '#start': 'start',
+  },
 };
 
 function initializeLocations(schedules) {
@@ -106,6 +121,32 @@ function populateBookings(slots, bookings, locationMap) {
   });
 }
 
+// TODO: this is virtually identical to populateBookings.  Refactor later
+function populateBlocks(slots, blocks, locationMap) {
+  blocks.forEach(b => {
+    const l = locationMap[b.locationId];
+    const slotList = slots[l].bookings;
+    const timeToMatch = new Date(b.start);
+    timeToMatch.setSeconds(0);
+    timeToMatch.setMilliseconds(0);
+    for (let i = 0; i < slotList.length; i++) {
+      let slot = slotList[i];
+
+      if (moment(slot.startTime).isSame(timeToMatch)) {
+        console.log('THE SAME!', slot.startTime, timeToMatch);
+        if (!slot.blocks) {
+          slot.blocks = [];
+        }
+
+        slot.blocks.push(b);
+        break;
+      } else {
+        console.log('not.', slot.startTime, timeToMatch);
+      }
+    }
+  });
+}
+
 function populateWithIndividualSlots(slots, locationMap, individualSlots) {
   console.log('before...', JSON.stringify(slots));
   individualSlots.forEach(s => {
@@ -140,15 +181,15 @@ exports.handler = (event, context, callback) => {
   // event.queryStringParameters.start (utc timestamp)
   // event.queryStringParameters.end (utc timestamp)
 
-  bookingQuery.IndexName = 'ByTenantAndStartTimeIndex';
-  bookingQuery.KeyConditionExpression = 'tenantId = :t and #start between :s and :e';
   bookingQuery.ExpressionAttributeValues = {
     ':s': start.getTime(),
     ':e': end.getTime(),
     ':t': tenantId,
   };
-  bookingQuery.ExpressionAttributeNames = {
-    '#start': 'start',
+  blockQuery.ExpressionAttributeValues = {
+    ':s': start.getTime(),
+    ':e': end.getTime(),
+    ':t': tenantId,
   };
 
   if (locationIds) {
@@ -161,13 +202,13 @@ exports.handler = (event, context, callback) => {
 
     const quoted = locationIds.map(l => `"${l}"`);
     bookingQuery.FilterExpression = `locationId IN (${Object.keys(locationsObj).toString()})`;
+    blockQuery.FilterExpression = `locationId IN (${Object.keys(locationsObj).toString()})`;
     Object.keys(locationsObj).forEach(l => {
       bookingQuery.ExpressionAttributeValues[l] = locationsObj[l];
+      blockQuery.ExpressionAttributeValues[l] = locationsObj[l];
     });
   }
 
-  slotQuery.IndexName = 'SlotsByTenantAndStartTimeIndex';
-  slotQuery.KeyConditionExpression = 'tenantId = :t and startTime between :s and :e';
   slotQuery.ExpressionAttributeValues = {
     ':s': start.getTime(),
     ':e': end.getTime(),
@@ -191,17 +232,19 @@ exports.handler = (event, context, callback) => {
   }
 
   const getSlots = dynamodb.query(slotQuery).promise();
-  // const getSlots = dynamodb.scan(slotQuery).promise();
+  const getBlocks = dynamodb.query(blockQuery).promise();
   const getSchedules = dynamodb.scan(scheduleQuery).promise();
   const getBookings = dynamodb.query(bookingQuery).promise();
 
-  Promise.all([getSlots, getSchedules, getBookings]).then((results) => {
+  Promise.all([getSlots, getSchedules, getBookings, getBlocks]).then((results) => {
     const individualSlots = results[0].Items;
     console.log('^^^^^');
     console.log(individualSlots);
     console.log(slotQuery);
     console.log('^^^^^');
     const schedules = results[1].Items;
+    const blocks = results[3].Items;
+    console.log('HERE ARE MY BLOCKS!!', blocks);
     // return grouped by location
     // grouped by day
     // a list of availability slots
@@ -222,10 +265,11 @@ exports.handler = (event, context, callback) => {
     let locationMap = slotsAndMap[1];
     populateEphemeralSlots(slots, locationMap, schedules, start, end);
     populateWithIndividualSlots(slots, locationMap, individualSlots);
-    // console.log('ephemeral slots created', JSON.stringify(slots));
     const bookings = results[2].Items;
     populateBookings(slots, bookings, locationMap);
     console.log('bookings populated', bookings);
+    populateBlocks(slots, blocks, locationMap);
+    console.log('blocks popualted', blocks);
 
     console.log('returning', JSON.stringify(slots));
     const response = {
@@ -236,11 +280,6 @@ exports.handler = (event, context, callback) => {
         'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,PATCH,DELETE'
       },
       body: JSON.stringify(slots),
-      // body: {
-      //   // slots: results[0].Items,
-      //   // schedules: results[1].Items,
-      //   // bookings: results[2].Items,
-      // },
     };
 
     callback(null, response);

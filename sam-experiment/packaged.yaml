@@ -1,0 +1,250 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'An example RESTful service
+
+  '
+Globals:
+  Function:
+    Timeout: 180
+Resources:
+  CreateBooking:
+    Properties:
+      CodeUri: s3://booking-dev/fd789927f7239beb158aae26e6a4df2b
+      Events:
+        CreateBooking:
+          Properties:
+            Method: post
+            Path: /bookings
+          Type: Api
+      Handler: bookings/create.handler
+      Runtime: nodejs6.10
+    Type: AWS::Serverless::Function
+  CreateDB:
+    Properties:
+      CodeUri: s3://booking-dev/fd789927f7239beb158aae26e6a4df2b
+      Events:
+        CreateDB:
+          Properties:
+            Method: get
+            Path: /operations
+          Type: Api
+      Handler: operations/index.handler
+      Runtime: nodejs6.10
+      Timeout: 180
+    Type: AWS::Serverless::Function
+  CreateLocation:
+    Properties:
+      CodeUri: s3://booking-dev/fd789927f7239beb158aae26e6a4df2b
+      Events:
+        CreateLocation:
+          Properties:
+            Method: post
+            Path: /locations
+          Type: Api
+      Handler: locations/create.handler
+      Runtime: nodejs6.10
+    Type: AWS::Serverless::Function
+  CreateSchedule:
+    Properties:
+      CodeUri: s3://booking-dev/fd789927f7239beb158aae26e6a4df2b
+      Events:
+        ListSchedules:
+          Properties:
+            Method: post
+            Path: /schedules
+          Type: Api
+      Handler: schedules/create.handler
+      Runtime: nodejs6.10
+    Type: AWS::Serverless::Function
+  CreateSlot:
+    Properties:
+      CodeUri: s3://booking-dev/fd789927f7239beb158aae26e6a4df2b
+      Events:
+        SlotBooking:
+          Properties:
+            Method: post
+            Path: /slots
+          Type: Api
+      Handler: slots/create.handler
+      Runtime: nodejs6.10
+    Type: AWS::Serverless::Function
+  DeleteSchedule:
+    Properties:
+      CodeUri: s3://booking-dev/fd789927f7239beb158aae26e6a4df2b
+      Events:
+        ListSchedules:
+          Properties:
+            Method: delete
+            Path: /schedules/{id}
+          Type: Api
+      Handler: schedules/delete.handler
+      Runtime: nodejs6.10
+    Type: AWS::Serverless::Function
+  GetBooking:
+    Properties:
+      CodeUri: s3://booking-dev/fd789927f7239beb158aae26e6a4df2b
+      Events:
+        GetBooking:
+          Properties:
+            Method: get
+            Path: /bookings/{id}
+          Type: Api
+      Handler: bookings/get.handler
+      Runtime: nodejs6.10
+    Type: AWS::Serverless::Function
+  GetBookings:
+    Properties:
+      CodeUri: s3://booking-dev/fd789927f7239beb158aae26e6a4df2b
+      Events:
+        ListBookings:
+          Properties:
+            Method: get
+            Path: /bookings
+          Type: Api
+      Handler: bookings/list.handler
+      Runtime: nodejs6.10
+    Type: AWS::Serverless::Function
+  GetSchedule:
+    Properties:
+      CodeUri: s3://booking-dev/fd789927f7239beb158aae26e6a4df2b
+      Events:
+        GetSchedule:
+          Properties:
+            Method: get
+            Path: /schedules/{id}
+          Type: Api
+      Handler: schedules/get.handler
+      Runtime: nodejs6.10
+    Type: AWS::Serverless::Function
+  GetSchedules:
+    Properties:
+      CodeUri: s3://booking-dev/fd789927f7239beb158aae26e6a4df2b
+      Events:
+        ListSchedules:
+          Properties:
+            Method: get
+            Path: /schedules
+          Type: Api
+      Handler: schedules/list.handler
+      Runtime: nodejs6.10
+    Type: AWS::Serverless::Function
+  ListLocations:
+    Properties:
+      CodeUri: s3://booking-dev/fd789927f7239beb158aae26e6a4df2b
+      Events:
+        ListLocations:
+          Properties:
+            Method: get
+            Path: /locations
+          Type: Api
+      Handler: locations/list.handler
+      Runtime: nodejs6.10
+    Type: AWS::Serverless::Function
+  ListSlots:
+    Properties:
+      CodeUri: s3://booking-dev/fd789927f7239beb158aae26e6a4df2b
+      Events:
+        ListSlots:
+          Properties:
+            Method: get
+            Path: /slots
+          Type: Api
+      Handler: slots/list.handler
+      Runtime: nodejs6.10
+    Type: AWS::Serverless::Function
+  OptionsBooking:
+    Properties:
+      CodeUri: s3://booking-dev/fd789927f7239beb158aae26e6a4df2b
+      Events:
+        OptionsBooking:
+          Properties:
+            Method: options
+            Path: /bookings/{id}
+          Type: Api
+      Handler: schedules/options.handler
+      Runtime: nodejs6.10
+    Type: AWS::Serverless::Function
+  OptionsBookings:
+    Properties:
+      CodeUri: s3://booking-dev/fd789927f7239beb158aae26e6a4df2b
+      Events:
+        OptionsBookings:
+          Properties:
+            Method: options
+            Path: /bookings
+          Type: Api
+      Handler: schedules/options.handler
+      Runtime: nodejs6.10
+    Type: AWS::Serverless::Function
+  OptionsLocations:
+    Properties:
+      CodeUri: s3://booking-dev/fd789927f7239beb158aae26e6a4df2b
+      Events:
+        OptionsLocations:
+          Properties:
+            Method: options
+            Path: /locations
+          Type: Api
+      Handler: schedules/options.handler
+      Runtime: nodejs6.10
+    Type: AWS::Serverless::Function
+  OptionsSchedule:
+    Properties:
+      CodeUri: s3://booking-dev/fd789927f7239beb158aae26e6a4df2b
+      Events:
+        ListSchedules:
+          Properties:
+            Method: options
+            Path: /schedules/{id}
+          Type: Api
+      Handler: schedules/options.handler
+      Runtime: nodejs6.10
+    Type: AWS::Serverless::Function
+  OptionsSchedules:
+    Properties:
+      CodeUri: s3://booking-dev/fd789927f7239beb158aae26e6a4df2b
+      Events:
+        ListSchedules:
+          Properties:
+            Method: options
+            Path: /schedules
+          Type: Api
+      Handler: schedules/options.handler
+      Runtime: nodejs6.10
+    Type: AWS::Serverless::Function
+  OptionsSlots:
+    Properties:
+      CodeUri: s3://booking-dev/fd789927f7239beb158aae26e6a4df2b
+      Events:
+        OptionsSlots:
+          Properties:
+            Method: options
+            Path: /slots
+          Type: Api
+      Handler: schedules/options.handler
+      Runtime: nodejs6.10
+    Type: AWS::Serverless::Function
+  UpdateBooking:
+    Properties:
+      CodeUri: s3://booking-dev/fd789927f7239beb158aae26e6a4df2b
+      Events:
+        UpdateBooking:
+          Properties:
+            Method: put
+            Path: /bookings/{id}
+          Type: Api
+      Handler: bookings/update.handler
+      Runtime: nodejs6.10
+    Type: AWS::Serverless::Function
+  UpdateSchedule:
+    Properties:
+      CodeUri: s3://booking-dev/fd789927f7239beb158aae26e6a4df2b
+      Events:
+        ListSchedules:
+          Properties:
+            Method: put
+            Path: /schedules/{id}
+          Type: Api
+      Handler: schedules/update.handler
+      Runtime: nodejs6.10
+    Type: AWS::Serverless::Function
+Transform: AWS::Serverless-2016-10-31

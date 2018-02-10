@@ -49,3 +49,6 @@ config.js
 
 # do not commit the database
 db
+
+# do not commit keys
+sam-experiment/config.json

@@ -74,6 +74,42 @@ const createBookingsParam = {
   }],
 };
 
+const createBlocksParams = {
+  TableName: 'blocks',
+  KeySchema: [
+    { AttributeName: 'id', KeyType: 'HASH' },
+  ],
+  AttributeDefinitions: [
+    { AttributeName: 'id', AttributeType: 'S'},
+    { AttributeName: 'start', AttributeType: 'N' },
+    { AttributeName: 'tenantId', AttributeType: 'S' },
+    ],
+  ProvisionedThroughput: {
+    ReadCapacityUnits: 1,
+    WriteCapacityUnits: 1,
+  },
+  GlobalSecondaryIndexes: [{
+    IndexName: 'ByTenantAndStartTimeIndex',
+    KeySchema: [
+      {
+        AttributeName: 'tenantId',
+        KeyType: 'HASH',
+      },
+      {
+        AttributeName: 'start',
+        KeyType: 'RANGE',
+      },
+    ],
+    Projection: {
+      ProjectionType: 'ALL',
+    },
+    ProvisionedThroughput: {
+      ReadCapacityUnits: 1,
+      WriteCapacityUnits: 1,
+    },
+  }],
+};
+
 const createSlotsParam = {
   TableName: 'slots',
   KeySchema: [
@@ -133,13 +169,14 @@ const createUsersParams = {
 
 exports.handler = (event, context, callback) => {
 
+  const createBlocks = dynamodb.createTable(createBlocksParams).promise();
   const createLocations = dynamodb.createTable(createLocationsParams).promise();
   const createUsers = dynamodb.createTable(createUsersParams).promise();
   const createSchedules = dynamodb.createTable(createSchedulesParams).promise();
   const createSlots = dynamodb.createTable(createSlotsParam).promise();
   const createBookings = dynamodb.createTable(createBookingsParam).promise();
 
-  Promise.all([/*createLocations, createUsers, createSchedules,*/ createSlots/*, createBookings*/]).then(values => {
+  Promise.all([/*createLocations, createUsers, createSchedules, createSlots, createBookings, */ createBlocks]).then(values => {
     console.log('Created!', values);
     const response = {
       statusCode: 200,

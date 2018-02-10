@@ -6,7 +6,7 @@ exports.handler = (event, context, callback) => {
   const timestamp = new Date().getTime();
 
   const json = JSON.parse(event.body);
-  console.log('Booking json:', json);
+  console.log('Booking json (put):', json);
 
   const expressionAttributeValues = {
     ':u': timestamp,

@@ -34,7 +34,8 @@ exports.handler = (event, context, callback) => {
         action: 'Booking created',
         timestamp,
       }],
-      payments: [],
+      notes: json.notes || [],
+      payments: json.payments || [],
     },
   };
 

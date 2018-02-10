@@ -89,6 +89,51 @@ Resources:
             Path: /slots
             Method: options
 
+  OptionsBlocks:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs6.10
+      Handler: schedules/options.handler
+      Events:
+        OptionsSlots:
+          Type: Api
+          Properties:
+            Path: /blocks
+            Method: options
+  CreateBlock:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs6.10
+      Handler: blocks/create.handler
+      Events:
+        CreateBlock:
+          Type: Api
+          Properties:
+            Path: /blocks
+            Method: post
+  DeleteBlock:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs6.10
+      Handler: blocks/delete.handler
+      Events:
+        DeleteBlock:
+          Type: Api
+          Properties:
+            Path: /blocks/{id}
+            Method: delete
+
+  DeleteBlockOptions:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs6.10
+      Handler: schedules/options.handler
+      Events:
+        DeleteBlockOptions:
+          Type: Api
+          Properties:
+            Path: /blocks/{id}
+            Method: options
   CreateBooking:
     Type: AWS::Serverless::Function
     Properties:
@@ -100,6 +145,50 @@ Resources:
           Properties:
             Path: /bookings
             Method: post
+  CreateBookingNote:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs6.10
+      Handler: bookings/addNote.handler
+      Events:
+        CreateBookingNote:
+          Type: Api
+          Properties:
+            Path: /bookings/{id}/notes
+            Method: post
+  CreateBookingNoteOptions:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs6.10
+      Handler: schedules/options.handler
+      Events:
+        CreateBookingNoteOptions:
+          Type: Api
+          Properties:
+            Path: /bookings/{id}/notes
+            Method: options
+  DeleteBookingNote:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs6.10
+      Handler: bookings/deleteNote.handler
+      Events:
+        DeleteBookingNote:
+          Type: Api
+          Properties:
+            Path: /bookings/{bookingId}/notes/{noteId}
+            Method: delete
+  DeleteBookingNoteOptions:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs6.10
+      Handler: schedules/options.handler
+      Events:
+        DeleteBookingNoteOptions:
+          Type: Api
+          Properties:
+            Path: /bookings/{bookingId}/notes/{noteId}
+            Method: options
   OptionsBooking:
     Type: AWS::Serverless::Function
     Properties:
