@@ -189,6 +189,28 @@ Resources:
           Properties:
             Path: /bookings/{bookingId}/notes/{noteId}
             Method: options
+  AddBookingPayment:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs6.10
+      Handler: bookings/addPayment.handler
+      Events:
+        AddBookingPayment:
+          Type: Api
+          Properties:
+            Path: /bookings/{id}/payments
+            Method: post
+  AddBookingPaymentOptions:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs6.10
+      Handler: schedules/options.handler
+      Events:
+        AddBookingPaymentOptions:
+          Type: Api
+          Properties:
+            Path: /bookings/{id}/payments
+            Method: options
   OptionsBooking:
     Type: AWS::Serverless::Function
     Properties:

@@ -133,15 +133,12 @@ function populateBlocks(slots, blocks, locationMap) {
       let slot = slotList[i];
 
       if (moment(slot.startTime).isSame(timeToMatch)) {
-        console.log('THE SAME!', slot.startTime, timeToMatch);
         if (!slot.blocks) {
           slot.blocks = [];
         }
 
         slot.blocks.push(b);
         break;
-      } else {
-        console.log('not.', slot.startTime, timeToMatch);
       }
     }
   });
